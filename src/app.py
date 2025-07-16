@@ -88,6 +88,12 @@ def get_planet_by_id(planet_id):
     return jsonify(planet.serialize()), 200
 
 
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = db.session.execute(select(User)).scalars().all()
+    results = list(map(lambda user: user.serialize(), users))
+    return jsonify(results), 200
+
 
 
 

@@ -5,18 +5,30 @@ import enum
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
+    favorite_planet_id: Mapped[int] = mapped_column(
+        ForeignKey("planets.id"), nullable=True)
+    favorite_character_id: Mapped[int] = mapped_column(
+        ForeignKey("characters.id"), nullable=True)
+
+    favorite_planet: Mapped["Planet"] = relationship(
+        "Planet", foreign_keys=[favorite_planet_id])
+    favorite_character: Mapped["Character"] = relationship(
+        "Character", foreign_keys=[favorite_character_id])
 
     def serialize(self):
         return {
             "id": self.id,
             "email": self.email,
-            # do not serialize the password, its a security breach
+            "favorite_planet": self.favorite_planet.nombre if self.favorite_planet else None,
+            "favorite_character": self.favorite_character.nombre if self.favorite_character else None
         }
 
 
@@ -29,8 +41,11 @@ class Planet(db.Model):
     terreno: Mapped[str] = mapped_column(String(120))
     poblacion: Mapped[int] = mapped_column(BigInteger)
 
-    # characters: Mapped[list["Character"]] = relationship(
-    #     "Character", back_populates="planeta_origen")
+    characters: Mapped[list["Character"]] = relationship(
+        "Character", back_populates="planeta_origen")
+
+    def __str__(self):
+        return self.nombre
 
     def serialize(self):
         return {
@@ -41,6 +56,7 @@ class Planet(db.Model):
             "poblacion": self.poblacion,
         }
 
+
 class Character(db.Model):
     __tablename__ = "characters"
 
@@ -50,11 +66,13 @@ class Character(db.Model):
         Enum("male", "female", "n/a", "unknown", name="genero_enum"), nullable=False)
     raza: Mapped[str] = mapped_column(String(80))
 
-  
-    # planeta_origen_id: Mapped[int] = mapped_column(ForeignKey("planets.id"))
+    planeta_origen_id: Mapped[int] = mapped_column(
+        ForeignKey("planets.id"), nullable=True)
+    planeta_origen: Mapped["Planet"] = relationship(
+        "Planet", back_populates="characters")
 
-    # planeta_origen: Mapped["Planet"] = relationship(
-    #     "Planet", back_populates="characters")
+    def __str__(self):
+        return self.nombre
 
     def serialize(self):
         return {
@@ -62,5 +80,5 @@ class Character(db.Model):
             "nombre": self.nombre,
             "genero": self.genero,
             "raza": self.raza,
-            # "planeta_origen_id": self.planeta_origen_id,
+            "planeta_origen_id": self.planeta_origen_id,
         }
