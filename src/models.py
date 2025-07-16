@@ -80,5 +80,5 @@ class Character(db.Model):
             "nombre": self.nombre,
             "genero": self.genero,
             "raza": self.raza,
-            "planeta_origen_id": self.planeta_origen_id,
+            "planeta_origen_nombre": self.planeta_origen.nombre if self.planeta_origen else None
         }
